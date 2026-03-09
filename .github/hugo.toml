@@ -1,0 +1,6 @@
+baseURL = 'http://localhost/'
+languageCode = 'es-es'
+title = 'Mi Tienda con PayPal'
+
+[params]
+  description = "Catálogo de productos"
