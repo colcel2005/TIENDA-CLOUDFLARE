@@ -2,9 +2,8 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.paypal.com https://www.paypalobjects.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://www.paypal.com; frame-src https://www.paypal.com;">
     <title>Catálogo de Productos</title>
-    <!-- ✅ PayPal SDK COMPLETO -->
-    <script src="https://www.paypal.com/sdk/js?client-id=ARCBdueLtkjJ1Bxi7kGwlJ0PGBKx1FpWm-MjgMgNb9H5t8P0BgYBYVl6VAGgjfCsYdWsB5TClZ0LvQTy&currency=USD&components=buttons"></script>
     <style>
         body { font-family: Arial, sans-serif; background: #f0f2f5; padding: 40px; }
         .contenedor { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
@@ -16,36 +15,44 @@
 <body>
     <h1>Mis 100 Artículos</h1>
     <div class="contenedor">
-        <!-- ✅ CSV en RAÍZ del proyecto (NO "data/") -->
-        {{ $csv := getCSV "," "productos.csv" }}
+        {{ $csv := getCSV "," "data/productos.csv" }}
         {{ range $i, $r := $csv }}
         {{ if ne $i 0 }}
         <div class="producto">
             <h3>{{ index $r 1 }}</h3>
             <p class="precio">${{ index $r 2 }}</p>
             <div id="paypal-button-{{ $i }}"></div>
-            <script>
+        </div>
+        {{ end }}
+        {{ end }}
+    </div>
+
+    <script src="https://www.paypal.com/sdk/js?client-id=ARCBdueLtkjJ1Bxi7kGwlJ0PGBKx1FpWm-MjgMgNb9H5t8P0BgYBYVl6VAGgjfCsYdWsB5TClZ0LvQTy&currency=USD&components=buttons&intent=capture"></script>
+    
+    <script>
+        window.addEventListener('load', function() {
+            {{ $csv := getCSV "," "data/productos.csv" }}
+            {{ range $i, $r := $csv }}
+            {{ if ne $i 0 }}
+            if (window.paypal) {
                 paypal.Buttons({
                     createOrder: function(data, actions) {
                         return actions.order.create({
                             purchase_units: [{
-                                amount: {
-                                    currency_code: 'USD',
-                                    value: '{{ index $r 2 }}'
-                                }
+                                amount: { currency_code: 'USD', value: '{{ index $r 2 }}' }
                             }]
                         });
                     },
                     onApprove: function(data, actions) {
                         return actions.order.capture().then(function(details) {
-                            alert('¡Pago exitoso! Gracias ' + details.payer.name.given_name);
+                            alert('¡Pago exitoso! ID: ' + details.id);
                         });
                     }
                 }).render('#paypal-button-{{ $i }}');
-            </script>
-        </div>
-        {{ end }}
-        {{ end }}
-    </div>
+            }
+            {{ end }}
+            {{ end }}
+        });
+    </script>
 </body>
 </html>

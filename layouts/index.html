@@ -1,4 +1,50 @@
-{{ define "main" }}
-  {{- partial "header.html" . -}}
-  {{- partial "content.html" . -}}
-{{ end }}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Catálogo de Productos</title>
+    <script src="https://www.paypal.com/sdk/js?client-id=ARCBdueLtkjJ1Bxi7kGwlJ0PGBKx1FpWm-MjgMgNb9H5t8P0BgYBYVl6VAGgjfCsYdWsB5TClZ0LvQTy&currency=USD&components=buttons"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f0f2f5; padding: 40px; }
+        .contenedor { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+        .producto { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; }
+        h1 { text-align: center; color: #1a1a1a; }
+        .precio { font-size: 20px; font-weight: bold; color: #2ecc71; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Mis 100 Artículos</h1>
+    <div class="contenedor">
+        {{ $csv := getCSV "," "data/productos.csv" }}
+        {{ range $i, $r := $csv }}
+        {{ if ne $i 0 }}
+        <div class="producto">
+            <h3>{{ index $r 1 }}</h3>
+            <p class="precio">${{ index $r 2 }}</p>
+            <div id="paypal-button-{{ $i }}"></div>
+            <script>
+                paypal.Buttons({
+                    createOrder: function(data, actions) {
+                        return actions.order.create({
+                            purchase_units: [{
+                                amount: {
+                                    currency_code: 'USD',
+                                    value: '{{ index $r 2 }}'
+                                }
+                            }]
+                        });
+                    },
+                    onApprove: function(data, actions) {
+                        return actions.order.capture().then(function(details) {
+                            alert('¡Pago exitoso! Gracias ' + details.payer.name.given_name);
+                        });
+                    }
+                }).render('#paypal-button-{{ $i }}');
+            </script>
+        </div>
+        {{ end }}
+        {{ end }}
+    </div>
+</body>
+</html>
+s
